@@ -140,6 +140,11 @@ space = {
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Finally, we run our model and track it as an mlflow experiment. Using hyperopt, we intelligently iterate over the hyperparameter space defined and can return the optimal hyperparameters within that space
+
+# COMMAND ----------
+
 rstate = np.random.default_rng(123)
 
 with mlflow.start_run(run_name='mkh_test_sa'): # TODO: assign a name to our mlflow run
