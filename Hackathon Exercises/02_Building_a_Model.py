@@ -179,10 +179,7 @@ def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the input sk
   This function trains, tunes and scores a model for each SKU and can be distributed as a Pandas UDF
   """
   # Always ensure proper ordering and indexing by Date
-  ... # TODO: Sort your data by date to ensure correctness 
-  ###############################
-  # JOSH TODO: SHOULD ABOVE LINE INCLUDE MORE HELP? (either whole thing or sku_pdf = ?)
-  ###############################
+  ... # TODO: Sort your data by date, in place, to ensure correctness of time series
   complete_ts = sku_pdf.set_index("Date").asfreq(freq="W-MON")
   
   # Since we'll group the large Spark DataFrame by (Product, SKU)

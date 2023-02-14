@@ -8,8 +8,8 @@
 
 # COMMAND ----------
 
-print(cloud_storage_path)
-print(dbName)
+print('cloud storage path: ' + cloud_storage_path)
+print('database: ' + dbName)
 
 # COMMAND ----------
 
@@ -61,7 +61,7 @@ series_df = pd.Series(pdf['Demand'].values, index=pdf['Date'])
 series_df = series_df.asfreq(freq='W-MON')
 
 forecast_horizon = ... # TODO: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
-is_history = ... # TODO: determine the is_history column based on the FORECAST_HORIZON constant above
+is_history = ... # TODO: define the is_history column based on the FORECAST_HORIZON constant above (applied in lines 9+10 below)
 train = series_df.iloc[is_history]
 score = series_df.iloc[~np.array(is_history)]
 
@@ -76,7 +76,7 @@ covid_breakpoint = dt.date(year=2020, month=3, day=1)
 exo_df = pdf.assign(Week = pd.DatetimeIndex(pdf["Date"]).isocalendar().week.tolist()) 
 
 exo_df = exo_df \
-  .assign(covid = ...) \ # TODO: assign a covid column which signifies dates greater than the covid_breakpoint
+  .assign(covid = ...) \ # TODO: assign a covid column which signifies dates greater than the covid_breakpoint (similar to lines 7 & 8)
   .assign(christmas = np.where((exo_df["Week"] >= 51) & (exo_df["Week"] <= 52) , 1, 0).tolist()) \
   .assign(new_year = np.where((exo_df["Week"] >= 1) & (exo_df["Week"] <= 4)  , 1, 0).tolist()) \
   .set_index('Date')
@@ -152,7 +152,9 @@ def evaluate_model(hyperopt_params):
   # For simplicity in this example, assume no seasonality
   model1 = SARIMAX(train, exog=train_exo, order=order_parameters, seasonal_order=(0, 0, 0, 0))
   fit1 = ...(disp=False) # TODO: fit model1 to our data
-  fcast1 = ...(start = ..., end = ..., exog = score_exo ) # TODO: take the model which was fit to the data and make predictions starting with the minimum date and ending with the maximum date
+  fcast1 = ...(start = ..., # TODO: take the model which was fit to the data and make predictions starting with the minimum date in our dataset
+               end = ..., # TODO: and ending with the maximum date in our dataset
+               exog = score_exo) 
 
   return {'status': hyperopt.STATUS_OK, 'loss': np.power(score.to_numpy() - fcast1.to_numpy(), 2).mean()}
 
@@ -180,14 +182,14 @@ rstate = np.random.default_rng(123)
 
 with mlflow.start_run(run_name='mkh_test_sa'): # TODO: assign a name to our mlflow run
   argmin = ...( # TODO: specify whether we are minimizing or maximizing our evaluation metric
-    fn=..., # TODO: pass the function we defined which we'll use to evaluate our model
-    space=..., # TODO: pass the search space we defined above
+    fn=..., # TODO: specify the function we defined which we'll use to evaluate our model
+    space=..., # TODO: specify the search space we defined above
     algo=tpe.suggest,  # this selects algorithm controlling how hyperopt navigates the search space
     max_evals=10,
     trials=SparkTrials(parallelism=1),
     rstate=rstate,
     verbose=False
-    )
+  )
 
 # COMMAND ----------
 
