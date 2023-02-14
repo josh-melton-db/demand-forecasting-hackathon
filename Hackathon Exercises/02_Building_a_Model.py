@@ -89,7 +89,7 @@ def split_train_score_data(data, forecast_horizon=FORECAST_HORIZON):
   - assumes data is sorted by date/time already
   - forecast_horizon in weeks
   """
-  is_history = ... # TODO: define the is_history column based on the FORECAST_HORIZON constant above
+  is_history = ... # TODO: add the is_history definition you developed in the last notebook
   train = data.iloc[is_history]
   score = data.iloc[~np.array(is_history)]
   return train, score
