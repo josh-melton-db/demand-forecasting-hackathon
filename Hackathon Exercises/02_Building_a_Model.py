@@ -1,11 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC *Prerequisite: Make sure to run 01_Introduction_And_Setup before running this notebook.*
+# MAGIC *Prerequisite: Complete 01_Hyperparameter_Tuning before running this notebook.*
 # MAGIC 
-# MAGIC In this notebook we first find an appropriate time series model and then apply that very same approach to train multiple models in parallel with great speed and cost-effectiveness.  
+# MAGIC In this notebook we leverage the exploration in notebook 01 to tune build a scalable model in a distributed way 
 # MAGIC 
 # MAGIC Key highlights for this notebook:
-# MAGIC - Use Databricks' collaborative and interactive notebook environment to find an appropriate time series mdoel
 # MAGIC - Pandas UDFs (user-defined functions) can take your single-node data science code, and distribute it across different keys (e.g. SKU)  
 # MAGIC - Hyperopt can also perform hyperparameter tuning from within a Pandas UDF  
 
@@ -90,7 +89,7 @@ def split_train_score_data(data, forecast_horizon=FORECAST_HORIZON):
   - assumes data is sorted by date/time already
   - forecast_horizon in weeks
   """
-  is_history = ... # TODO: determine the is_history column based on the FORECAST_HORIZON constant above
+  is_history = ... # TODO: define the is_history column based on the FORECAST_HORIZON constant above
   train = data.iloc[is_history]
   score = data.iloc[~np.array(is_history)]
   return train, score
@@ -139,7 +138,7 @@ display(enriched_df)
 
 # COMMAND ----------
 
-# Evaluate model on the traing data set
+# Create an objective function that we'll use to evaluate model on the traing data set
 def evaluate_model(hyperopt_params):
 
   # SARIMAX requires a tuple of Python integers
@@ -174,17 +173,18 @@ def evaluate_model(hyperopt_params):
 
 # COMMAND ----------
 
+# Define your Pandas UDF
 def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the input sku_df and output
   """
   This function trains, tunes and scores a model for each SKU and can be distributed as a Pandas UDF
   """
   # Always ensure proper ordering and indexing by Date
-  ... # TODO: Sort your data by date to ensure correctness
+  ... # TODO: Sort your data by date to ensure correctness 
+  ###############################
+  # JOSH TODO: SHOULD ABOVE LINE INCLUDE MORE HELP? (either whole thing or sku_pdf = ?)
+  ###############################
   complete_ts = sku_pdf.set_index("Date").asfreq(freq="W-MON")
   
-  print(complete_ts)
-  
-
   # Since we'll group the large Spark DataFrame by (Product, SKU)
   PRODUCT = sku_pdf["Product"].iloc[0]
   SKU = sku_pdf["SKU"].iloc[0]

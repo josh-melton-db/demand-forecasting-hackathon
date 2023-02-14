@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC Run setup and import cells
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
@@ -35,8 +40,17 @@ from pyspark.sql.types import *
 
 # COMMAND ----------
 
+# MAGIC %md # Read Data
+
+# COMMAND ----------
+
 demand_df = spark.read.table(f"{dbName}.part_level_demand")
 demand_df = demand_df.cache() # just for this example notebook
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Select an example SKU from our dataset to explore and analyze
 
 # COMMAND ----------
 
@@ -50,6 +64,10 @@ forecast_horizon = ... # TODO: choose a number for the forecast horizon (in week
 is_history = ... # TODO: determine the is_history column based on the FORECAST_HORIZON constant above
 train = series_df.iloc[is_history]
 score = series_df.iloc[~np.array(is_history)]
+
+# COMMAND ----------
+
+# MAGIC %md # Calculate some external factors for our time series
 
 # COMMAND ----------
 
@@ -71,11 +89,20 @@ score_exo = exo_df.iloc[~np.array(is_history)]
 
 # COMMAND ----------
 
+# MAGIC %md # Fit a model
+
+# COMMAND ----------
+
 fit1 = SARIMAX(train, order=(1, 2, 1), seasonal_order=(0, 0, 0, 0), initialization_method="estimated").fit(warn_convergence = False)
 fcast1 = fit1.predict(start = min(train.index), end = max(score_exo.index)).rename("Without exogenous variables")
 
 fit2 = SARIMAX(train, exog=train_exo, order=(1, 2, 1), seasonal_order=(0, 0, 0, 0), initialization_method="estimated").fit(warn_convergence = False)
 fcast2 = fit2.predict(start = min(train.index), end = max(score_exo.index), exog = score_exo).rename("With exogenous variables")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Compare our predictions of inventory for the example SKU to the actual inventory levels
 
 # COMMAND ----------
 
@@ -91,6 +118,10 @@ plt.legend([line0, line1, line2], ["Actuals", fcast1.name, fcast2.name])
 plt.xlabel("Time")
 plt.ylabel("Demand")
 plt.title("SARIMAX")
+
+# COMMAND ----------
+
+# MAGIC %md # Hyperparameter Tuning
 
 # COMMAND ----------
 
@@ -120,7 +151,7 @@ def evaluate_model(hyperopt_params):
 
   # For simplicity in this example, assume no seasonality
   model1 = SARIMAX(train, exog=train_exo, order=order_parameters, seasonal_order=(0, 0, 0, 0))
-  fit1 = ...(disp=False) # TODO: fit model1 defined above
+  fit1 = ...(disp=False) # TODO: fit model1 to our data
   fcast1 = ...(start = ..., end = ..., exog = score_exo ) # TODO: take the model which was fit to the data and make predictions starting with the minimum date and ending with the maximum date
 
   return {'status': hyperopt.STATUS_OK, 'loss': np.power(score.to_numpy() - fcast1.to_numpy(), 2).mean()}
