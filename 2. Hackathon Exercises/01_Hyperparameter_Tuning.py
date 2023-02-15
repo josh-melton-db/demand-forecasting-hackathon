@@ -67,7 +67,12 @@ score = series_df.iloc[~np.array(is_history)]
 
 # COMMAND ----------
 
-# MAGIC %md # Calculate some external factors for our time series
+# MAGIC %md # Add external factors
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Let's mix in more valuable information with our existing time series data: christmas, new years, and covid breakout
 
 # COMMAND ----------
 
@@ -93,6 +98,11 @@ score_exo = exo_df.iloc[~np.array(is_history)]
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC For the specific product we isolated above, let's fit a model to the original dataset and another model to the dataset including our extra, more valuable information
+
+# COMMAND ----------
+
 fit1 = SARIMAX(train, order=(1, 2, 1), seasonal_order=(0, 0, 0, 0), initialization_method="estimated").fit(warn_convergence = False)
 fcast1 = fit1.predict(start = min(train.index), end = max(score_exo.index)).rename("Without exogenous variables")
 
@@ -102,7 +112,7 @@ fcast2 = fit2.predict(start = min(train.index), end = max(score_exo.index), exog
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Compare our predictions of inventory for the example SKU to the actual inventory levels
+# MAGIC Compare our predictions of inventory to the actual inventory levels for our chosen example SKU 
 
 # COMMAND ----------
 
@@ -152,7 +162,8 @@ def evaluate_model(hyperopt_params):
   # For simplicity in this example, assume no seasonality
   model1 = SARIMAX(train, exog=train_exo, order=order_parameters, seasonal_order=(0, 0, 0, 0))
   fit1 = ...(disp=False) # TODO: fit model1 to our data
-  fcast1 = ...(start = ..., # TODO: take the model which was fit to the data and make predictions starting with the minimum date in our dataset
+  # Take the model which was fit to our data and make predictions
+  fcast1 = ...(start = ..., # TODO: starting with the minimum date in our dataset...
                end = ..., # TODO: and ending with the maximum date in our dataset
                exog = score_exo) 
 

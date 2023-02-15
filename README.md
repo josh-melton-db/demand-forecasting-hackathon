@@ -1,1 +1,0 @@
-# demand-forecasting-hackathon
