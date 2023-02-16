@@ -1,15 +1,14 @@
 # Databricks notebook source
+# MAGIC %md # Setup
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC Run setup and import cells
 
 # COMMAND ----------
 
-# MAGIC %run ./Setup/_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
-print('cloud storage path: ' + cloud_storage_path)
-print('database: ' + dbName)
+# MAGIC %run ./_resources/00_configuration
 
 # COMMAND ----------
 
@@ -33,7 +32,6 @@ mlflow.autolog(disable=True)
 
 from statsmodels.tsa.api import Holt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-# from sklearn.metrics import mean_absolute_percentage_error
 
 import pyspark.sql.functions as f
 from pyspark.sql.types import *
@@ -44,7 +42,7 @@ from pyspark.sql.types import *
 
 # COMMAND ----------
 
-demand_df = spark.read.table(f"{dbName}.part_level_demand")
+demand_df = spark.read.table(f"{db_name}.part_level_demand")
 demand_df = demand_df.cache() # just for this example notebook
 
 # COMMAND ----------
@@ -61,7 +59,7 @@ series_df = pd.Series(pdf['Demand'].values, index=pdf['Date'])
 series_df = series_df.asfreq(freq='W-MON')
 
 forecast_horizon = ... # TODO: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
-is_history = ... # TODO: define the is_history column based on the FORECAST_HORIZON constant above (applied in lines 9+10 below)
+is_history = [True] * (len(series_df) - forecast_horizon) + [False] * forecast_horizon
 train = series_df.iloc[is_history]
 score = series_df.iloc[~np.array(is_history)]
 
@@ -81,7 +79,7 @@ covid_breakpoint = dt.date(year=2020, month=3, day=1)
 exo_df = pdf.assign(Week = pd.DatetimeIndex(pdf["Date"]).isocalendar().week.tolist()) 
 
 exo_df = exo_df \
-  .assign(covid = ...) \ # TODO: assign a covid column which signifies dates greater than the covid_breakpoint (similar to lines 7 & 8)
+  .assign(covid = np.where(pdf["Date"] >= np.datetime64(covid_breakpoint), 1, 0).tolist()) \
   .assign(christmas = np.where((exo_df["Week"] >= 51) & (exo_df["Week"] <= 52) , 1, 0).tolist()) \
   .assign(new_year = np.where((exo_df["Week"] >= 1) & (exo_df["Week"] <= 4)  , 1, 0).tolist()) \
   .set_index('Date')
@@ -117,7 +115,7 @@ fcast2 = fit2.predict(start = min(train.index), end = max(score_exo.index), exog
 # COMMAND ----------
 
 plt.figure(figsize=(18, 6))
-plt.plot(series_df, marker="o", color="black")
+(line0,) =  plt.plot(series_df, marker="o", color="black")
 plt.plot(fcast1[10:], color="blue")
 (line1,) = plt.plot(fcast1[10:], marker="o", color="blue")
 plt.plot(fcast2[10:], color="green")
@@ -163,9 +161,11 @@ def evaluate_model(hyperopt_params):
   model1 = SARIMAX(train, exog=train_exo, order=order_parameters, seasonal_order=(0, 0, 0, 0))
   fit1 = ...(disp=False) # TODO: fit model1 to our data
   # Take the model which was fit to our data and make predictions
-  fcast1 = ...(start = ..., # TODO: starting with the minimum date in our dataset...
-               end = ..., # TODO: and ending with the maximum date in our dataset
-               exog = score_exo) 
+  fcast1 = fit1.predict(
+              start = min(score_exo.index), 
+              end = max(score_exo.index), 
+              exog = score_exo
+            ) 
 
   return {'status': hyperopt.STATUS_OK, 'loss': np.power(score.to_numpy() - fcast1.to_numpy(), 2).mean()}
 
@@ -176,10 +176,21 @@ def evaluate_model(hyperopt_params):
 
 # COMMAND ----------
 
-space = {
-  'p': scope.int(hyperopt.hp.quniform('p', 0, 4, 1)),
-  'd': scope.int(hyperopt.hp.quniform('d', 0, 2, 1)),
-  'q': scope.int(hyperopt.hp.quniform('q', 0, 4, 1)) 
+# MAGIC %md
+# MAGIC Example:
+# MAGIC ```
+# MAGIC search_space = {
+# MAGIC   "max_depth": hyperopt.hp.quniform("max_depth", 2, 5, 1),
+# MAGIC   "num_trees": hyperopt.hp.quniform("num_trees", 10, 100, 1)
+# MAGIC }
+# MAGIC ```
+
+# COMMAND ----------
+
+search_space = {
+  'p': scope.int(...('p', 0, 4, 1)), # TODO: define the distribution of the search space, similar to example above, for each line
+  'd': scope.int(...('d', 0, 2, 1)),
+  'q': scope.int(...('q', 0, 4, 1)) 
 }
 
 # COMMAND ----------
@@ -189,12 +200,27 @@ space = {
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Example:
+# MAGIC ```
+# MAGIC argmin = fmin(
+# MAGIC   fn=objective_function, 
+# MAGIC   space=search_space,
+# MAGIC   algo=tpe.suggest, 
+# MAGIC   max_evals=num_evals,
+# MAGIC   trials=trials,
+# MAGIC   rstate=np.random.default_rng(42)
+# MAGIC )
+# MAGIC ```
+
+# COMMAND ----------
+
 rstate = np.random.default_rng(123)
 
-with mlflow.start_run(run_name='mkh_test_sa'): # TODO: assign a name to our mlflow run
-  argmin = ...( # TODO: specify whether we are minimizing or maximizing our evaluation metric
-    fn=..., # TODO: specify the function we defined which we'll use to evaluate our model
-    space=..., # TODO: specify the search space we defined above
+with mlflow.start_run(run_name='...'):     # TODO: assign a name to our mlflow run
+  argmin = ...(                            # TODO: provide the hyperopt function that will optimize our objective function
+    fn=...,                                # TODO: specify the objective function we defined above which we'll use to evaluate our model
+    space=...,                             # TODO: specify the search space we defined above
     algo=tpe.suggest,  # this selects algorithm controlling how hyperopt navigates the search space
     max_evals=10,
     trials=SparkTrials(parallelism=1),

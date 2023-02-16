@@ -8,7 +8,7 @@
 
 # COMMAND ----------
 
-dbName = 'demand_planning_josh_melton'
+# MAGIC %run ./_resources/00_configuration
 
 # COMMAND ----------
 
@@ -42,7 +42,7 @@ from pyspark.sql.types import *
 
 # COMMAND ----------
 
-demand_df = spark.read.table(f"{dbName}.part_level_demand")
+demand_df = spark.read.table(f"{db_name}.part_level_demand")
 demand_df = demand_df.cache() # just for this example notebook
 
 # COMMAND ----------
@@ -217,7 +217,7 @@ space = {
 
 rstate = np.random.default_rng(123)
 
-with mlflow.start_run(run_name='mkh_test_sa'): # TODO: assign a name to our mlflow run
+with mlflow.start_run(run_name='tuned_demand_forecasting'): # TODO: assign a name to our mlflow run
   argmin = fmin(                               # TODO: specify whether we are minimizing or maximizing our evaluation metric
     fn=evaluate_model,                         # TODO: specify the function we defined which we'll use to evaluate our model
     space=space,                               # TODO: specify the search space we defined above

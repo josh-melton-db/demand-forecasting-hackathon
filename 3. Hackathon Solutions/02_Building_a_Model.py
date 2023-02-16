@@ -2,16 +2,15 @@
 # MAGIC %md
 # MAGIC *Prerequisite: Complete 01_Hyperparameter_Tuning before running this notebook.*
 # MAGIC 
-# MAGIC In this notebook we leverage the exploration in notebook 01 to tune build a scalable model in a distributed way 
+# MAGIC In this notebook we leverage the exploration in notebook 01 to build and tune a scalable model in a distributed way 
 # MAGIC 
 # MAGIC Key highlights for this notebook:
+# MAGIC - Hyperopt is used to perform hyperparameter tuning 
 # MAGIC - Pandas UDFs (user-defined functions) can take your single-node data science code, and distribute it across different keys (e.g. SKU)  
-# MAGIC - Hyperopt can also perform hyperparameter tuning from within a Pandas UDF  
 
 # COMMAND ----------
 
-dbName = 'demand_planning_josh_melton'
-print('database name: ' + dbName)
+# MAGIC %run ./_resources/00_configuration
 
 # COMMAND ----------
 
@@ -46,7 +45,7 @@ from pyspark.sql.types import *
 
 # COMMAND ----------
 
-demand_df = spark.read.table(f"{dbName}.part_level_demand")
+demand_df = spark.read.table(f"{db_name}.part_level_demand")
 demand_df = demand_df.cache() # just for this example notebook
 
 # COMMAND ----------
@@ -346,11 +345,16 @@ display(forecast_df)
 # forecast_df.write \
 # .mode("overwrite") \
 # .format("delta") \
-# .saveAsTable(f'{dbName}.part_level_demand_with_forecasts')
+# .saveAsTable(f'{db_name}.part_level_demand_with_forecasts')
 
 # COMMAND ----------
 
-# display(spark.sql(f"SELECT * FROM {dbName}.part_level_demand_with_forecasts"))
+# display(spark.sql(f"SELECT * FROM {db_name}.part_level_demand_with_forecasts"))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC You may find the full series of notebooks at https://github.com/databricks-industry-solutions/parts-demand-forecasting. For more information about the related solution accelerator, visit https://www.databricks.com/solutions/accelerators/demand-forecasting.
 
 # COMMAND ----------
 
