@@ -9,7 +9,6 @@
 # COMMAND ----------
 
 dbName = 'demand_planning_josh_melton'
-print(dbName)
 
 # COMMAND ----------
 
@@ -33,7 +32,6 @@ mlflow.autolog(disable=True)
 
 from statsmodels.tsa.api import Holt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-# from sklearn.metrics import mean_absolute_percentage_error
 
 import pyspark.sql.functions as f
 from pyspark.sql.types import *
@@ -178,11 +176,14 @@ def evaluate_model(hyperopt_params):
 
 # COMMAND ----------
 
-# JOSH TODO: format this example 
-# search_space = {
-#   "max_depth": hp.quniform("max_depth", 2, 5, 1),
-#   "num_trees": hp.quniform("num_trees", 10, 100, 1)
-# }
+# MAGIC %md
+# MAGIC Example:
+# MAGIC ```
+# MAGIC search_space = {
+# MAGIC   "max_depth": hyperopt.hp.quniform("max_depth", 2, 5, 1),
+# MAGIC   "num_trees": hyperopt.hp.quniform("num_trees", 10, 100, 1)
+# MAGIC }
+# MAGIC ```
 
 # COMMAND ----------
 
@@ -199,24 +200,27 @@ space = {
 
 # COMMAND ----------
 
-# JOSH TODO: format this example 
-# argmin = fmin(
-#   fn=objective_function, 
-#   space=search_space,
-#   algo=tpe.suggest, 
-#   max_evals=num_evals,
-#   trials=trials,
-#   rstate=np.random.default_rng(42)
-# )
+# MAGIC %md
+# MAGIC Example:
+# MAGIC ```
+# MAGIC argmin = fmin(
+# MAGIC   fn=objective_function, 
+# MAGIC   space=search_space,
+# MAGIC   algo=tpe.suggest, 
+# MAGIC   max_evals=num_evals,
+# MAGIC   trials=trials,
+# MAGIC   rstate=np.random.default_rng(42)
+# MAGIC )
+# MAGIC ```
 
 # COMMAND ----------
 
 rstate = np.random.default_rng(123)
 
 with mlflow.start_run(run_name='mkh_test_sa'): # TODO: assign a name to our mlflow run
-  argmin = fmin( # TODO: specify whether we are minimizing or maximizing our evaluation metric
-    fn=evaluate_model, # TODO: specify the function we defined which we'll use to evaluate our model
-    space=space, # TODO: specify the search space we defined above
+  argmin = fmin(                               # TODO: specify whether we are minimizing or maximizing our evaluation metric
+    fn=evaluate_model,                         # TODO: specify the function we defined which we'll use to evaluate our model
+    space=space,                               # TODO: specify the search space we defined above
     algo=tpe.suggest,  # this selects algorithm controlling how hyperopt navigates the search space
     max_evals=10,
     trials=SparkTrials(parallelism=1),
@@ -227,7 +231,3 @@ with mlflow.start_run(run_name='mkh_test_sa'): # TODO: assign a name to our mlfl
 # COMMAND ----------
 
 displayHTML(f"The optimal parameters for the selected series with SKU '{pdf.SKU.iloc[0]}' are: d = '{argmin.get('d')}', p = '{argmin.get('p')}' and q = '{argmin.get('q')}'")
-
-# COMMAND ----------
-
-

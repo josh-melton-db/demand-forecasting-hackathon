@@ -10,12 +10,8 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
-
-# COMMAND ----------
-
 dbName = 'demand_planning_josh_melton'
-print(dbName)
+print('database name: ' + dbName)
 
 # COMMAND ----------
 
@@ -39,7 +35,6 @@ mlflow.autolog(disable=True)
 
 from statsmodels.tsa.api import Holt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-# from sklearn.metrics import mean_absolute_percentage_error
 
 import pyspark.sql.functions as f
 from pyspark.sql.types import *
@@ -47,7 +42,7 @@ from pyspark.sql.types import *
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Read in data
+# MAGIC ### Read in data
 
 # COMMAND ----------
 
@@ -58,8 +53,7 @@ demand_df = demand_df.cache() # just for this example notebook
 
 # MAGIC %md
 # MAGIC 
-# MAGIC ## Train thousands of models at scale, any time
-# MAGIC *while still using your preferred libraries and approaches*
+# MAGIC ###Transform data at scale, while still using your preferred libraries and approaches
 
 # COMMAND ----------
 
@@ -67,24 +61,13 @@ FORECAST_HORIZON = 40 # TODO: choose a number for the forecast horizon (in weeks
 
 # COMMAND ----------
 
-#JOSH TODO: format this example
-# def apply_model(df_pandas: pd.DataFrame) -> pd.DataFrame:
-#     """
-#     Applies model to data for a particular device, represented as a pandas DataFrame
-#     """
-#     model_path = df_pandas["model_path"].iloc[0]
-
-#     input_columns = ["feature_1", "feature_2", "feature_3"]
-#     X = df_pandas[input_columns]
-
-#     model = mlflow.sklearn.load_model(model_path)
-#     prediction = model.predict(X)
-
-#     return_df = pd.DataFrame({
-#         "record_id": df_pandas["record_id"],
-#         "prediction": prediction
-#     })
-#     return return_df
+# MAGIC %md
+# MAGIC Example:
+# MAGIC ```
+# MAGIC def apply_model(df_pandas: pd.DataFrame) -> pd.DataFrame:
+# MAGIC     ... transformations to df_pandas go here ...
+# MAGIC     return return_df
+# MAGIC ```
 
 # COMMAND ----------
 
@@ -139,6 +122,18 @@ enriched_schema = StructType(
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Example:
+# MAGIC ```
+# MAGIC enriched_df = (
+# MAGIC   pandas_df
+# MAGIC   .groupBy("device_id")
+# MAGIC   .applyInPandas(transformation_function, expected_schema)
+# MAGIC )
+# MAGIC ```
+
+# COMMAND ----------
+
 enriched_df = (
   demand_df
     .groupBy("Product")
@@ -150,24 +145,60 @@ display(enriched_df)
 
 # MAGIC %md 
 # MAGIC 
-# MAGIC ### What we're doing: High-Level Overview
+# MAGIC What we're doing, high-level overview:
+# MAGIC 
+# MAGIC <img src="https://github.com/PawaritL/data-ai-world-tour-dsml-jan-2022/blob/main/pandas-udf-workflow.png?raw=true" width=40%>
 # MAGIC 
 # MAGIC Benefits:
 # MAGIC - Pure Python & Pandas: easy to develop, test
 # MAGIC - Continue using your favorite libraries
 # MAGIC - Simply assume you're working with a Pandas DataFrame for a single SKU
-# MAGIC 
-# MAGIC <img src="https://github.com/PawaritL/data-ai-world-tour-dsml-jan-2022/blob/main/pandas-udf-workflow.png?raw=true" width=40%>
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC 
-# MAGIC #### Build, tune and score a model per each SKU with Pandas UDFs
+# MAGIC ### Build, tune and score a model per each SKU with Pandas UDFs
 
 # COMMAND ----------
 
-# JOSH TODO: add formatted example
+# MAGIC %md
+# MAGIC Example of input and output of the function:
+# MAGIC ```
+# MAGIC def apply_model(df_pandas: pd.DataFrame) -> pd.DataFrame:
+# MAGIC     ... ML stuff goes here ...
+# MAGIC     return return_df
+# MAGIC ```
+# MAGIC Example of defining a model, fitting it to data and using it to make predictions:
+# MAGIC ```
+# MAGIC model1 = SARIMAX(train, exog=train_exo, order=order_parameters, seasonal_order=(0, 0, 0, 0))
+# MAGIC fit1 = model1.fit(disp=False)
+# MAGIC fcast1 = fit1.predict(
+# MAGIC             start = min(score_exo.index),
+# MAGIC             end = max(score_exo.index),
+# MAGIC             exog = score_exo
+# MAGIC ) 
+# MAGIC ```
+# MAGIC Example of defining a search space:
+# MAGIC ```
+# MAGIC space = {
+# MAGIC   'p': scope.int(hyperopt.hp.quniform('p', 0, 4, 1)),
+# MAGIC   'd': scope.int(hyperopt.hp.quniform('d', 0, 2, 1)),
+# MAGIC   'q': scope.int(hyperopt.hp.quniform('q', 0, 4, 1)) 
+# MAGIC }
+# MAGIC ```
+# MAGIC Example of defining a function to minimize:
+# MAGIC ```
+# MAGIC argmin = fmin(             
+# MAGIC   fn=evaluate_model,  
+# MAGIC   space=space,            
+# MAGIC   algo=tpe.suggest,  # this selects algorithm controlling how hyperopt navigates the search space
+# MAGIC   max_evals=10,
+# MAGIC   trials=SparkTrials(parallelism=1),
+# MAGIC   rstate=rstate,
+# MAGIC   verbose=False
+# MAGIC )
+# MAGIC ```
 
 # COMMAND ----------
 
@@ -272,11 +303,19 @@ tuning_schema = StructType(
 
 # MAGIC %md
 # MAGIC 
-# MAGIC #### Run distributed processing: `groupBy("SKU")` + `applyInPandas(...)`
+# MAGIC ### Run distributed predictions
 
 # COMMAND ----------
 
-# JOSH TODO: add formatted example
+# MAGIC %md
+# MAGIC Example of groupBy + applyInPandas:
+# MAGIC ```
+# MAGIC prediction_df = (
+# MAGIC   combined_df
+# MAGIC   .groupby("device_id")
+# MAGIC   .applyInPandas(apply_model, schema=apply_return_schema)
+# MAGIC )
+# MAGIC ```
 
 # COMMAND ----------
 
@@ -303,15 +342,15 @@ display(forecast_df)
 
 # COMMAND ----------
 
-# Write the data 
-forecast_df.write \
-.mode("overwrite") \
-.format("delta") \
-.saveAsTable(f'{dbName}.part_level_demand_with_forecasts')
+# # Write the data 
+# forecast_df.write \
+# .mode("overwrite") \
+# .format("delta") \
+# .saveAsTable(f'{dbName}.part_level_demand_with_forecasts')
 
 # COMMAND ----------
 
-display(spark.sql(f"SELECT * FROM {dbName}.part_level_demand_with_forecasts"))
+# display(spark.sql(f"SELECT * FROM {dbName}.part_level_demand_with_forecasts"))
 
 # COMMAND ----------
 
