@@ -4,7 +4,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=false
+# MAGIC %run ./Setup/_resources/00-setup $reset_all_data=false
 
 # COMMAND ----------
 
@@ -33,7 +33,7 @@ mlflow.autolog(disable=True)
 
 from statsmodels.tsa.api import Holt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from sklearn.metrics import mean_absolute_percentage_error
+# from sklearn.metrics import mean_absolute_percentage_error
 
 import pyspark.sql.functions as f
 from pyspark.sql.types import *
