@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC *Prerequisite: Complete 01_Hyperparameter_Tuning before running this notebook.*
+# MAGIC *Complete 01_Data_Exploration before running this notebook*
 # MAGIC 
 # MAGIC In this notebook we leverage the exploration in notebook 01 to build and tune a scalable model in a distributed way 
 # MAGIC 
@@ -136,7 +136,7 @@ enriched_schema = StructType(
 enriched_df = (
   demand_df
     ... # TODO: group by the Product column
-    ... # TODO: use applyInPandas to run our add_exo_variables function in a distributed way
+    ... # TODO: use applyInPandas to run our add_exo_variables function in a distributed way. We'll produce the enriched_schema we defined above
 )
 display(enriched_df)
 
@@ -307,7 +307,7 @@ tuning_schema = StructType(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example of groupBy + applyInPandas:
+# MAGIC Example of <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">groupBy + applyInPandas</a>:
 # MAGIC ```
 # MAGIC prediction_df = (
 # MAGIC   combined_df

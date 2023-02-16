@@ -97,7 +97,7 @@ score_exo = exo_df.iloc[~np.array(is_history)]
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC For the specific product we isolated above, let's fit a <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.htmlhttps://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html">Sarimax model</a> to the original dataset and another model to the dataset including our extra, more valuable information
+# MAGIC For the specific product we isolated above, let's fit a <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.htmlhttps://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html">Sarimax model</a> to the original dataset and compare to a model trained on the dataset including our extra, more valuable information
 
 # COMMAND ----------
 

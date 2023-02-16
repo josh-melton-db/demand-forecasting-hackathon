@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC *Prerequisite: Complete 01_Hyperparameter_Tuning before running this notebook.*
+# MAGIC *Prerequisite: Complete 01_Data_Exploration before running this notebook.*
 # MAGIC 
 # MAGIC In this notebook we leverage the exploration in notebook 01 to build and tune a scalable model in a distributed way 
 # MAGIC 
