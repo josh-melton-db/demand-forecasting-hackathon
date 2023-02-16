@@ -61,7 +61,7 @@ FORECAST_HORIZON = ... # TODO: choose a number for the forecast horizon (in week
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example:
+# MAGIC Example input/output type definition for a function to be run via <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">applyInPandas</a>:
 # MAGIC ```
 # MAGIC def apply_model(df_pandas: pd.DataFrame) -> pd.DataFrame:
 # MAGIC     ... transformations to df_pandas go here ...
@@ -71,7 +71,7 @@ FORECAST_HORIZON = ... # TODO: choose a number for the forecast horizon (in week
 # COMMAND ----------
 
 # DBTITLE 0,Modularize single-node logic from before into Python functions
-def add_exo_variables(pdf: ...) -> ...: # TODO: specify what will be the input and output
+def add_exo_variables(pdf: ...) -> ...: # TODO: specify what will be the input and output types
   
   midnight = dt.datetime.min.time()
   timestamp = pdf["Date"].apply(lambda x: dt.datetime.combine(x, midnight))
@@ -122,7 +122,7 @@ enriched_schema = StructType(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example:
+# MAGIC Example of <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">groupby + applyInPandas</a>:
 # MAGIC ```
 # MAGIC enriched_df = (
 # MAGIC   pandas_df
@@ -162,7 +162,7 @@ display(enriched_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example of input and output of the function:
+# MAGIC Example of input and output of the function to be run via <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">applyInPandas</a>:
 # MAGIC ```
 # MAGIC def apply_model(df_pandas: pd.DataFrame) -> pd.DataFrame:
 # MAGIC     ... ML stuff goes here ...
@@ -178,7 +178,7 @@ display(enriched_df)
 # MAGIC             exog = score_exo
 # MAGIC ) 
 # MAGIC ```
-# MAGIC Example of defining a search space:
+# MAGIC Example of defining a <a href="http://hyperopt.github.io/hyperopt/getting-started/search_spaces/">search space</a>:
 # MAGIC ```
 # MAGIC space = {
 # MAGIC   'p': scope.int(hyperopt.hp.quniform('p', 0, 4, 1)),
@@ -186,12 +186,12 @@ display(enriched_df)
 # MAGIC   'q': scope.int(hyperopt.hp.quniform('q', 0, 4, 1)) 
 # MAGIC }
 # MAGIC ```
-# MAGIC Example of defining a function to minimize:
+# MAGIC Example of defining a <a href="http://hyperopt.github.io/hyperopt/">function to minimize</a>:
 # MAGIC ```
 # MAGIC argmin = fmin(             
 # MAGIC   fn=evaluate_model,  
 # MAGIC   space=space,            
-# MAGIC   algo=tpe.suggest,  # this selects algorithm controlling how hyperopt navigates the search space
+# MAGIC   algo=tpe.suggest,
 # MAGIC   max_evals=10,
 # MAGIC   trials=SparkTrials(parallelism=1),
 # MAGIC   rstate=rstate,
