@@ -134,12 +134,22 @@ plt.title("SARIMAX")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC For the model above, we applied a manual trial-and-error method to find good parameters. MLFlow and Hyperopt can be leveraged to find optimal parameters automatically. 
+# MAGIC For the model above, we would have had to apply a manual trial-and-error method to find good parameters. MLFlow and Hyperopt can be leveraged to find optimal parameters automatically. 
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC First, we must define an evaluation function. It trains a <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html">SARIMAX</a> model with given parameters and evaluates it by calculating the mean squared error.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Example of defining a model, fitting it to data and using it to make predictions:
+# MAGIC ```
+# MAGIC rf = RandomForestRegressor()
+# MAGIC rf.fit(X, y)
+# MAGIC predictions = rf.predict(X)
+# MAGIC ```
 
 # COMMAND ----------
 

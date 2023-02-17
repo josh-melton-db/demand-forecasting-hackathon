@@ -4,7 +4,7 @@
 # MAGIC 
 # MAGIC 
 # MAGIC # Agenda
-# MAGIC ## ML and Demand Forecasting on Databricks
+# MAGIC ## Distributed ML for Demand Forecasting on Databricks
 
 # COMMAND ----------
 
