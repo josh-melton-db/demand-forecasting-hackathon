@@ -50,6 +50,19 @@ demand_df = demand_df.cache() # just for this example notebook
 
 # COMMAND ----------
 
+# MAGIC %md 
+# MAGIC 
+# MAGIC What we're doing, high-level overview:
+# MAGIC 
+# MAGIC <img src="https://github.com/PawaritL/data-ai-world-tour-dsml-jan-2022/blob/main/pandas-udf-workflow.png?raw=true" width=40%>
+# MAGIC 
+# MAGIC Benefits:
+# MAGIC - Pure Python & Pandas: easy to develop, test
+# MAGIC - Continue using your favorite libraries
+# MAGIC - Simply assume you're working with a Pandas DataFrame for a single SKU
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC 
 # MAGIC ###Transform data at scale, while still using your preferred libraries and approaches
@@ -102,7 +115,7 @@ def split_train_score_data(data, forecast_horizon=FORECAST_HORIZON):
 
 # COMMAND ----------
 
-# Expected output for our enriched dataset
+# Expected output for our enriched dataset, to be used in the next step
 enriched_schema = StructType(
   [
     StructField('Date', DateType()),
@@ -118,7 +131,7 @@ enriched_schema = StructType(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Let's have a look at our core dataset, with exogenous variables added. Data for all SKUs is logically unified within a Spark DataFrame, allowing large-scale distributed processing rather than single node procecssing with pandas.
+# MAGIC Data for all SKUs is logically unified within a Spark DataFrame, allowing large-scale distributed processing rather than single node procecssing with pandas. The dataframe for each key that we group by is processed in parallel
 
 # COMMAND ----------
 
@@ -126,7 +139,7 @@ enriched_schema = StructType(
 # MAGIC Example of <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">groupby + applyInPandas</a>:
 # MAGIC ```
 # MAGIC enriched_df = (
-# MAGIC   pandas_df
+# MAGIC   spark_df
 # MAGIC   .groupBy("device_id")
 # MAGIC   .applyInPandas(transformation_function, expected_schema)
 # MAGIC )
@@ -136,23 +149,10 @@ enriched_schema = StructType(
 
 enriched_df = (
   demand_df
-    ... # TODO: group by the Product column
-    ... # TODO: use applyInPandas to run our add_exo_variables function in a distributed way. We'll produce the enriched_schema we defined above
+  ... # TODO: group by the Product column
+  ... # TODO: use applyInPandas to run our add_exo_variables function in a distributed way. We'll produce the enriched_schema we defined above
 )
 display(enriched_df)
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC 
-# MAGIC What we're doing, high-level overview:
-# MAGIC 
-# MAGIC <img src="https://github.com/PawaritL/data-ai-world-tour-dsml-jan-2022/blob/main/pandas-udf-workflow.png?raw=true" width=40%>
-# MAGIC 
-# MAGIC Benefits:
-# MAGIC - Pure Python & Pandas: easy to develop, test
-# MAGIC - Continue using your favorite libraries
-# MAGIC - Simply assume you're working with a Pandas DataFrame for a single SKU
 
 # COMMAND ----------
 
