@@ -143,6 +143,16 @@ plt.title("SARIMAX")
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC Example of defining a model, fitting it to data and using it to make predictions:
+# MAGIC ```
+# MAGIC rf = RandomForestRegressor()
+# MAGIC rf.fit(X, y)
+# MAGIC predictions = rf.predict(X)
+# MAGIC ```
+
+# COMMAND ----------
+
 # Define an evaluation function for the SARIMAX model 
 def evaluate_model(hyperopt_params):
   
@@ -162,7 +172,7 @@ def evaluate_model(hyperopt_params):
   fit1 = model1.fit(disp=False) # TODO: fit model1 to our data
   # Take the model which was fit to our data and make predictions
   fcast1 = fit1.predict(
-              start = min(score_exo.index), # TODO: starting with the minimum date in our dataset...
+              start = min(score_exo.index), # TODO: starting with the minimum date in our dataset
               end = max(score_exo.index), # TODO: and ending with the maximum date in our dataset
               exog = score_exo
             ) 

@@ -2,11 +2,11 @@
 # MAGIC %md
 # MAGIC *Complete 01_Data_Exploration before running this notebook*
 # MAGIC 
-# MAGIC In this notebook we leverage the exploration in notebook 01 to build and tune a scalable model in a distributed way 
+# MAGIC Exercises: for the rest of this notebook, find the ```#TODO```s and fill in the ```...``` with your answers </br> 
 # MAGIC 
 # MAGIC Key highlights for this notebook:
-# MAGIC - Hyperopt is used to perform hyperparameter tuning 
-# MAGIC - Pandas UDFs (user-defined functions) can take your single-node data science code, and distribute it across different keys (e.g. SKU)  
+# MAGIC - Hyperopt for hyperparameter tuning 
+# MAGIC - Take your single-node data science code from the last notebook, and distribute it across different keys (e.g. SKU) with Pandas UDFs
 
 # COMMAND ----------
 
