@@ -71,13 +71,14 @@ FORECAST_HORIZON = ... # TODO: choose a number for the forecast horizon (in week
 # COMMAND ----------
 
 # DBTITLE 0,Modularize single-node logic from before into Python functions
+# This function will be used to transform our data in parallel
 def add_exo_variables(pdf: ...) -> ...: # TODO: specify what will be the input and output types
   
   midnight = dt.datetime.min.time()
   timestamp = pdf["Date"].apply(lambda x: dt.datetime.combine(x, midnight))
   calendar_week = timestamp.dt.isocalendar().week
   
-  # define flexible, custom logic for exogenous variables
+  # define our exogenous variables
   covid_breakpoint = dt.datetime(year=2020, month=3, day=1)
   enriched_df = (
     pdf
