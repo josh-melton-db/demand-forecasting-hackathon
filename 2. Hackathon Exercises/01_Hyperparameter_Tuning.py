@@ -66,7 +66,7 @@ pdf = demand_df.filter(f.col("SKU") == example_sku).toPandas()
 series_df = pd.Series(pdf['Demand'].values, index=pdf['Date'])
 series_df = series_df.asfreq(freq='W-MON')
 
-forecast_horizon = ... # TODO: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
+forecast_horizon = ... # TODO 1: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
 is_history = [True] * (len(series_df) - forecast_horizon) + [False] * forecast_horizon
 train = series_df.iloc[is_history]
 score = series_df.iloc[~np.array(is_history)]
@@ -147,7 +147,7 @@ plt.title("SARIMAX")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC First, we must define an evaluation function. It trains a <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html">SARIMAX</a> model with given parameters and evaluates it by calculating the mean squared error.
+# MAGIC First, we must define an evaluation function. It trains a <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html">SARIMAX</a> model with given parameters and evaluates it by calculating the loss
 
 # COMMAND ----------
 
@@ -177,7 +177,7 @@ def evaluate_model(hyperopt_params):
 
   # For simplicity in this example, assume no seasonality
   model1 = SARIMAX(train, exog=train_exo, order=order_parameters, seasonal_order=(0, 0, 0, 0))
-  fit1 = ...(disp=False) # TODO: fit model1 to our data
+  fit1 = ...(disp=False) # TODO 2: fit model1 to our data
   # Take the model which was fit to our data and make predictions
   fcast1 = fit1.predict(
               start = min(score_exo.index), 
@@ -206,7 +206,7 @@ def evaluate_model(hyperopt_params):
 # COMMAND ----------
 
 search_space = {
-  'p': scope.int(...('p', 0, 4, 1)), # TODO: define the distribution of the search space, similar to example above, for each line
+  'p': scope.int(...('p', 0, 4, 1)), # TODO 3: define the distribution of the search space, similar to example above, for each line
   'd': scope.int(...('d', 0, 2, 1)),
   'q': scope.int(...('q', 0, 4, 1)) 
 }
@@ -214,7 +214,7 @@ search_space = {
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Finally, we run our model and track it as an mlflow experiment. Using hyperopt, we intelligently iterate over the hyperparameter space defined and can return the optimal hyperparameters within that space
+# MAGIC Finally, we run our model and track it as an mlflow experiment. Using hyperopt, we intelligently iterate over the hyperparameter space defined and return the optimal hyperparameters within that space
 
 # COMMAND ----------
 
@@ -235,10 +235,10 @@ search_space = {
 
 rstate = np.random.default_rng(123)
 
-with mlflow.start_run(run_name='...'):     # TODO: assign a name to our mlflow run
-  argmin = ...(                            # TODO: provide the hyperopt function that will optimize our objective function
-    fn=...,                                # TODO: specify the objective function we defined above which we'll use to evaluate our model
-    space=...,                             # TODO: specify the search space we defined above
+with mlflow.start_run(run_name='...'):     # TODO 4: assign a name to our mlflow run
+  argmin = ...(                            # TODO 5: provide the hyperopt function that will optimize our objective function
+    fn=...,                                # TODO 6: specify the objective function we defined above which we'll use to evaluate our model
+    space=...,                             # TODO 7: specify the search space we defined above
     algo=tpe.suggest,  # this selects algorithm controlling how hyperopt navigates the search space
     max_evals=10,
     trials=SparkTrials(parallelism=1),

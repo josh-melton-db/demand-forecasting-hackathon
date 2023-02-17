@@ -69,7 +69,7 @@ demand_df = demand_df.cache() # just for this example notebook
 
 # COMMAND ----------
 
-FORECAST_HORIZON = ... # TODO: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
+FORECAST_HORIZON = ... # TODO 1: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
 
 # COMMAND ----------
 
@@ -85,7 +85,7 @@ FORECAST_HORIZON = ... # TODO: choose a number for the forecast horizon (in week
 
 # DBTITLE 0,Modularize single-node logic from before into Python functions
 # This function will be used to transform our data in parallel
-def add_exo_variables(pdf: ...) -> ...: # TODO: specify what will be the input and output types
+def add_exo_variables(pdf: ...) -> ...: # TODO 2: specify what will be the input and output types
   
   midnight = dt.datetime.min.time()
   timestamp = pdf["Date"].apply(lambda x: dt.datetime.combine(x, midnight))
@@ -149,8 +149,8 @@ enriched_schema = StructType(
 
 enriched_df = (
   demand_df
-  ... # TODO: group by the Product column
-  ... # TODO: use applyInPandas to run our add_exo_variables function in a distributed way. We'll produce the enriched_schema we defined above
+  ... # TODO 3: group by the Product column
+  ... # TODO 4: use applyInPandas to run our add_exo_variables function in a distributed way. We'll produce the enriched_schema we defined above
 )
 display(enriched_df)
 
@@ -181,10 +181,9 @@ display(enriched_df)
 # MAGIC ```
 # MAGIC Example of defining a <a href="http://hyperopt.github.io/hyperopt/getting-started/search_spaces/">search space</a>:
 # MAGIC ```
-# MAGIC space = {
-# MAGIC   'p': scope.int(hyperopt.hp.quniform('p', 0, 4, 1)),
-# MAGIC   'd': scope.int(hyperopt.hp.quniform('d', 0, 2, 1)),
-# MAGIC   'q': scope.int(hyperopt.hp.quniform('q', 0, 4, 1)) 
+# MAGIC search_space = {
+# MAGIC     "max_depth": hp.quniform("max_depth", 2, 5, 1),
+# MAGIC     "num_trees": hp.quniform("num_trees", 10, 100, 1)
 # MAGIC }
 # MAGIC ```
 # MAGIC Example of defining a <a href="http://hyperopt.github.io/hyperopt/">function to minimize</a>:
@@ -202,7 +201,7 @@ display(enriched_df)
 
 # COMMAND ----------
 
-def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the expected the input and output
+def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO 5: define the expected the input and output
     """
     This function trains, tunes and scores a model for each SKU and can be distributed as a Pandas UDF
     """
@@ -236,10 +235,10 @@ def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the expected
             enforce_stationarity = False,
             enforce_invertibility = False
           )
-          fitted_model = ...(disp=False, method='nm') # TODO: fit the model defined above to our data
+          fitted_model = ...(disp=False, method='nm') # TODO 6: fit the model defined above to our data
 
           # Validation
-          fcast = ...(  # TODO: define how the model should make predictions
+          fcast = ...(  # TODO 7: use our fitted model to make predictions
             start=validation_data.index.min(), 
             end=validation_data.index.max(), 
             exog=validation_data[exo_fields]
@@ -248,16 +247,16 @@ def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the expected
           return {'status': hyperopt.STATUS_OK, 'loss': np.power(validation_data.Demand.to_numpy() - fcast.to_numpy(), 2).mean()}
 
     search_space = {
-        'p': scope.int(...('p', 0, 4, 1)), # TODO: define the distribution of the hyperopt search space
-        'd': scope.int(...('d', 0, 2, 1)), # TODO: define the distribution of the hyperopt search space
-        'q': scope.int(...('q', 0, 4, 1))  # TODO: define the distribution of the hyperopt search space
+        'p': scope.int(...('p', 0, 4, 1)), # TODO 8: define the distribution of the hyperopt search space
+        'd': scope.int(...('d', 0, 2, 1)), # TODO 9: define the distribution of the hyperopt search space
+        'q': scope.int(...('q', 0, 4, 1))  # TODO 10: define the distribution of the hyperopt search space
     }
 
     rstate = np.random.default_rng(123) # just for reproducibility of this notebook
 
-    best_hparams = ...(   # TODO: provide the hyperopt function that defines what we're minimizing
-      fn=...,             # TODO: provide the function that we'll use to evaluate the model (defined in line 20)
-      space=...,          # TODO: provide the search space
+    best_hparams = ...(   # TODO 11: provide the hyperopt function that defines what we're minimizing
+      fn=...,             # TODO 12: provide the function that we'll use to evaluate the model (defined in line 20)
+      space=...,          # TODO 13: provide the search space
       algo=tpe.suggest, 
       max_evals=10
     )
@@ -289,6 +288,7 @@ def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the expected
 
 # COMMAND ----------
 
+# Define the schema that we expect to be produced by our applyInPandas
 tuning_schema = StructType(
   [
     StructField('Product', StringType()),
@@ -329,8 +329,8 @@ n_tasks = enriched_df.select("Product", "SKU").distinct().count()
 forecast_df = (
   enriched_df
   .repartition(n_tasks, "Product", "SKU")
-  ...        # TODO: group by the columns you're parallelizing by
-  ...        # TODO: apply the objective function and the expected schema that we defined above
+  ...        # TODO 14: group by the columns you're parallelizing by
+  ...        # TODO 15: apply the objective function and the expected schema that we defined above
 )
 
 display(forecast_df)
