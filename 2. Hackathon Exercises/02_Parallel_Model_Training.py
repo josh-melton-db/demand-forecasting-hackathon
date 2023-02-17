@@ -54,7 +54,7 @@ demand_df = demand_df.cache() # just for this example notebook
 # MAGIC 
 # MAGIC What we're doing, high-level overview:
 # MAGIC 
-# MAGIC <img src="https://github.com/PawaritL/data-ai-world-tour-dsml-jan-2022/blob/main/pandas-udf-workflow.png?raw=true" width=40%>
+# MAGIC <img src="https://github.com/josh-melton-db/demand-forecasting-hackathon/blob/main/1.%20Examples/Includes/pandas-udf-workflow.png?raw=true" width=40%>
 # MAGIC 
 # MAGIC Benefits:
 # MAGIC - Pure Python & Pandas: easy to develop, test
