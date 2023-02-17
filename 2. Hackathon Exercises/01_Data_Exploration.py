@@ -2,7 +2,7 @@
 # MAGIC %md 
 # MAGIC Exercises: for the rest of this notebook, find the ```#TODO```s and fill in the ```...``` with your answers </br></br>
 # MAGIC Key highlights for this notebook:
-# MAGIC - identify the optimal hyperparameters for our demand forecasting model on a single SKU using pandas
+# MAGIC - identify the optimal hyperparameters for our demand forecasting model on a single SKU using pandas and Hyperopt
 
 # COMMAND ----------
 
