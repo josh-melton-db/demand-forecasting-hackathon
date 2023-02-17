@@ -1,12 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC *Complete 01_Data_Exploration before running this notebook*
+# MAGIC *Prerequisite: Complete 01_Hyperparameter_Tuning before running this notebook.*
 # MAGIC 
-# MAGIC Exercises: for the rest of this notebook, find the ```#TODO```s and fill in the ```...``` with your answers </br> 
+# MAGIC In this notebook we leverage the exploration in notebook 01 to build and tune a scalable model in a distributed way 
 # MAGIC 
 # MAGIC Key highlights for this notebook:
-# MAGIC - Hyperopt for hyperparameter tuning 
-# MAGIC - Take your single-node data science code from the last notebook, and distribute it across different keys (e.g. SKU) with Pandas UDFs
+# MAGIC - Hyperopt is used to perform hyperparameter tuning 
+# MAGIC - Pandas UDFs (user-defined functions) can take your single-node data science code, and distribute it across different keys (e.g. SKU)  
 
 # COMMAND ----------
 
@@ -56,12 +56,12 @@ demand_df = demand_df.cache() # just for this example notebook
 
 # COMMAND ----------
 
-FORECAST_HORIZON = ... # TODO: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
+FORECAST_HORIZON = 40 # TODO: choose a number for the forecast horizon (in weeks). We recommend somewhere between 26-52
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example input/output type definition for a function to be run via <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">applyInPandas</a>:
+# MAGIC Example:
 # MAGIC ```
 # MAGIC def apply_model(df_pandas: pd.DataFrame) -> pd.DataFrame:
 # MAGIC     ... transformations to df_pandas go here ...
@@ -71,7 +71,7 @@ FORECAST_HORIZON = ... # TODO: choose a number for the forecast horizon (in week
 # COMMAND ----------
 
 # DBTITLE 0,Modularize single-node logic from before into Python functions
-def add_exo_variables(pdf: ...) -> ...: # TODO: specify what will be the input and output types
+def add_exo_variables(pdf: pd.DataFrame) -> pd.DataFrame: # TODO: specify what will be the output
   
   midnight = dt.datetime.min.time()
   timestamp = pdf["Date"].apply(lambda x: dt.datetime.combine(x, midnight))
@@ -122,7 +122,7 @@ enriched_schema = StructType(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example of <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">groupby + applyInPandas</a>:
+# MAGIC Example:
 # MAGIC ```
 # MAGIC enriched_df = (
 # MAGIC   pandas_df
@@ -135,8 +135,8 @@ enriched_schema = StructType(
 
 enriched_df = (
   demand_df
-    ... # TODO: group by the Product column
-    ... # TODO: use applyInPandas to run our add_exo_variables function in a distributed way. We'll produce the enriched_schema we defined above
+    .groupBy("Product")
+    .applyInPandas(add_exo_variables, enriched_schema) # TODO: use applyInPandas to run our add_exo_variables function in a distributed way
 )
 display(enriched_df)
 
@@ -162,7 +162,7 @@ display(enriched_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example of input and output of the function to be run via <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">applyInPandas</a>:
+# MAGIC Example of input and output of the function:
 # MAGIC ```
 # MAGIC def apply_model(df_pandas: pd.DataFrame) -> pd.DataFrame:
 # MAGIC     ... ML stuff goes here ...
@@ -178,7 +178,7 @@ display(enriched_df)
 # MAGIC             exog = score_exo
 # MAGIC ) 
 # MAGIC ```
-# MAGIC Example of defining a <a href="http://hyperopt.github.io/hyperopt/getting-started/search_spaces/">search space</a>:
+# MAGIC Example of defining a search space:
 # MAGIC ```
 # MAGIC space = {
 # MAGIC   'p': scope.int(hyperopt.hp.quniform('p', 0, 4, 1)),
@@ -186,12 +186,12 @@ display(enriched_df)
 # MAGIC   'q': scope.int(hyperopt.hp.quniform('q', 0, 4, 1)) 
 # MAGIC }
 # MAGIC ```
-# MAGIC Example of defining a <a href="http://hyperopt.github.io/hyperopt/">function to minimize</a>:
+# MAGIC Example of defining a function to minimize:
 # MAGIC ```
 # MAGIC argmin = fmin(             
 # MAGIC   fn=evaluate_model,  
 # MAGIC   space=space,            
-# MAGIC   algo=tpe.suggest,
+# MAGIC   algo=tpe.suggest,  # this selects algorithm controlling how hyperopt navigates the search space
 # MAGIC   max_evals=10,
 # MAGIC   trials=SparkTrials(parallelism=1),
 # MAGIC   rstate=rstate,
@@ -201,7 +201,7 @@ display(enriched_df)
 
 # COMMAND ----------
 
-def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the expected the input and output
+def build_tune_and_score_model(sku_pdf: pd.DataFrame) -> pd.DataFrame: # TODO: what is expected the input and output format?
     """
     This function trains, tunes and scores a model for each SKU and can be distributed as a Pandas UDF
     """
@@ -235,10 +235,10 @@ def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the expected
             enforce_stationarity = False,
             enforce_invertibility = False
           )
-          fitted_model = ...(disp=False, method='nm') # TODO: fit the model defined above to our data
+          fitted_model = model.fit(disp=False, method='nm') # TODO: fit the model defined above to our data
 
           # Validation
-          fcast = ...(  # TODO: define how the model should make predictions
+          fcast = fitted_model.predict(  # TODO: define how the model should make predictions
             start=validation_data.index.min(), 
             end=validation_data.index.max(), 
             exog=validation_data[exo_fields]
@@ -247,16 +247,16 @@ def build_tune_and_score_model(sku_pdf: ...) -> ...: # TODO: define the expected
           return {'status': hyperopt.STATUS_OK, 'loss': np.power(validation_data.Demand.to_numpy() - fcast.to_numpy(), 2).mean()}
 
     search_space = {
-        'p': scope.int(...('p', 0, 4, 1)), # TODO: define the distribution of the hyperopt search space
-        'd': scope.int(...('d', 0, 2, 1)), # TODO: define the distribution of the hyperopt search space
-        'q': scope.int(...('q', 0, 4, 1))  # TODO: define the distribution of the hyperopt search space
+        'p': scope.int(hyperopt.hp.quniform('p', 0, 4, 1)), # TODO: define the distribution of the hyperopt search space
+        'd': scope.int(hyperopt.hp.quniform('d', 0, 2, 1)), # TODO: define the distribution of the hyperopt search space
+        'q': scope.int(hyperopt.hp.quniform('q', 0, 4, 1))  # TODO: define the distribution of the hyperopt search space
     }
 
     rstate = np.random.default_rng(123) # just for reproducibility of this notebook
 
-    best_hparams = ...(   # TODO: provide the hyperopt function that defines what we're minimizing
-      fn=...,             # TODO: provide the function that we'll use to evaluate the model (defined in line 20)
-      space=...,          # TODO: provide the search space
+    best_hparams = fmin(   # TODO: provide the hyperopt function that defines what we're minimizing
+      fn=evaluate_model,   # TODO: provide the function that we'll use to evaluate the model (defined in line 20)
+      space=search_space,  # TODO: provide the search space
       algo=tpe.suggest, 
       max_evals=10
     )
@@ -307,7 +307,7 @@ tuning_schema = StructType(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Example of <a href="https://spark.apache.org/docs/3.2.1/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html">groupBy + applyInPandas</a>:
+# MAGIC Example of groupBy + applyInPandas:
 # MAGIC ```
 # MAGIC prediction_df = (
 # MAGIC   combined_df
@@ -328,8 +328,8 @@ n_tasks = enriched_df.select("Product", "SKU").distinct().count()
 forecast_df = (
   enriched_df
   .repartition(n_tasks, "Product", "SKU")
-  ...        # TODO: group by the columns you're parallelizing by
-  ...        # TODO: apply the objective function and the expected schema that we defined above
+  .groupBy("Product", "SKU") # TODO: group by the columns you're partitioning by
+  .applyInPandas(build_tune_and_score_model, schema=tuning_schema) # TODO: apply the model function that was defined in pandas
 )
 
 display(forecast_df)
@@ -338,11 +338,6 @@ display(forecast_df)
 
 # MAGIC %md
 # MAGIC ## Save to Delta
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Since we're running a lab with many people we won't write out the results, but we could by running the below cells
 
 # COMMAND ----------
 
@@ -359,7 +354,7 @@ display(forecast_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC You can find the full series of solution accelerator notebooks at https://github.com/databricks-industry-solutions/parts-demand-forecasting. For more information about the accelerator, visit https://www.databricks.com/solutions/accelerators/demand-forecasting.
+# MAGIC You may find the full series of notebooks at https://github.com/databricks-industry-solutions/parts-demand-forecasting. For more information about the related solution accelerator, visit https://www.databricks.com/solutions/accelerators/demand-forecasting.
 
 # COMMAND ----------
 

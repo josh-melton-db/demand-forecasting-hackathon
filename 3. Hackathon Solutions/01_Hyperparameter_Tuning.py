@@ -1,4 +1,10 @@
 # Databricks notebook source
+# MAGIC %md 
+# MAGIC Key highlights for this notebook:
+# MAGIC - identify the optimal hyperparameters for our demand forecasting model on a single SKU using pandas and Hyperopt
+
+# COMMAND ----------
+
 # MAGIC %md # Setup
 
 # COMMAND ----------
@@ -241,3 +247,8 @@ with mlflow.start_run(run_name='tuned_demand_forecasting'): # TODO: assign a nam
 # COMMAND ----------
 
 displayHTML(f"The optimal parameters for the selected series with SKU '{pdf.SKU.iloc[0]}' are: d = '{argmin.get('d')}', p = '{argmin.get('p')}' and q = '{argmin.get('q')}'")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC There we have it! We've identified the optimal hyperparameters for our model on one SKU. In the next notebook, we'll walk through how to train our models in parallel across many SKUs
