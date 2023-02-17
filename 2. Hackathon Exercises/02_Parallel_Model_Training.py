@@ -360,7 +360,7 @@ display(forecast_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC You can find the full series of solution accelerator notebooks at https://github.com/databricks-industry-solutions/parts-demand-forecasting. For more information about the accelerator, visit https://www.databricks.com/solutions/accelerators/demand-forecasting.
+# MAGIC We're all done! We've taken a dataset, applied pandas transformations, tuned hyperparameters for our model, and made predictions, all in parallel. You can find the full series of solution accelerator notebooks at https://github.com/databricks-industry-solutions/parts-demand-forecasting. For more information about the accelerator, visit https://www.databricks.com/solutions/accelerators/demand-forecasting.
 
 # COMMAND ----------
 
