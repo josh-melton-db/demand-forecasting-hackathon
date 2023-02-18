@@ -147,7 +147,7 @@ plt.title("SARIMAX")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC First, we must define an evaluation function. It trains a <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html">SARIMAX</a> model with given parameters and evaluates it by calculating the loss
+# MAGIC First, we must define an objective function. It trains a <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html">SARIMAX</a> model with given parameters and evaluates it by calculating the loss
 
 # COMMAND ----------
 
@@ -161,7 +161,7 @@ plt.title("SARIMAX")
 
 # COMMAND ----------
 
-# Define an evaluation function for the SARIMAX model 
+# Define an objective function for the SARIMAX model 
 def evaluate_model(hyperopt_params):
   
   # Configure model parameters
