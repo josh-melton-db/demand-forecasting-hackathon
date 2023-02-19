@@ -341,15 +341,15 @@ display(forecast_df)
 
 # COMMAND ----------
 
-# # Write the data 
-# forecast_df.write \
-# .mode("overwrite") \
-# .format("delta") \
-# .saveAsTable(f'{db_name}.part_level_demand_with_forecasts')
+# Write the data 
+forecast_df.write \
+.mode("overwrite") \
+.format("delta") \
+.saveAsTable(f'{db_name}.part_level_demand_with_forecasts')
 
 # COMMAND ----------
 
-# display(spark.sql(f"SELECT * FROM {db_name}.part_level_demand_with_forecasts"))
+display(spark.sql(f"SELECT * FROM {db_name}.part_level_demand_with_forecasts"))
 
 # COMMAND ----------
 

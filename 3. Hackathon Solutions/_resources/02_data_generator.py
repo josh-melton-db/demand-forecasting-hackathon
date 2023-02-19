@@ -368,4 +368,174 @@ display(spark.sql(f"SELECT COUNT(*) as row_count FROM {dbName}.part_level_demand
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # Simulate BoM Data
+# MAGIC This notebook section simulates Bill-Of-Material data
 
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Simulate data
+
+# COMMAND ----------
+
+import string
+import networkx as nx
+import random
+import numpy as np
+import os
+
+# COMMAND ----------
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+def generate_random_strings(n):
+  random.seed(123)
+  random_mat_numbers = set()
+  while True:
+    random_mat_numbers.add(id_generator(size=5))
+    if len(random_mat_numbers) >= n:
+      break
+  return(random_mat_numbers)
+
+# COMMAND ----------
+
+def extend_one_step(node_from_):
+  res_ = [  ]
+  node_list_to_be_extended_ = [  ]
+  # second level
+  random_split_number = random.randint(2, 4)
+  for i in range(random_split_number):
+    node_to = random_mat_numbers.pop()
+    node_list_to_be_extended_.append(node_to)
+    res_.append((node_to, node_from_))
+  return res_, node_list_to_be_extended_
+
+# COMMAND ----------
+
+def extend_one_level(node_list_to_be_extended, level, sku):
+  
+  
+  print(f"""In  'extend_one_level': level={level} and sku = {sku}  """)
+  
+  if level == 1:
+    head_node = random_mat_numbers.pop() 
+    node_list_to_be_extended_one_level = [ ]
+    node_list_to_be_extended_one_level.append(head_node)
+    res_one_level = [ (head_node, sku) ]
+  else:
+    res_one_level = [ ]
+    node_list_to_be_extended_one_level = [ ]
+    
+    if len(node_list_to_be_extended) > 2:
+      node_list_to_be_extended_ = node_list_to_be_extended[ : 3 ]
+    else:
+      node_list_to_be_extended_ = node_list_to_be_extended
+
+    for node in node_list_to_be_extended_:
+      res_one_step = [ ]
+      node_list_to_be_extended_one_step = [ ]
+      
+      res_one_step, node_list_to_be_extended_one_step = extend_one_step(node)    
+      res_one_level.extend(res_one_step)
+      node_list_to_be_extended_one_level.extend(node_list_to_be_extended_one_step)
+  
+  return res_one_level, node_list_to_be_extended_one_level
+
+# COMMAND ----------
+
+#Generate a set of material numbers
+random_mat_numbers = generate_random_strings(1000000)
+
+# COMMAND ----------
+
+#Create a listof all SKU's
+demand_df = spark.read.table(f"{dbName}.part_level_demand")
+all_skus = demand_df.select('SKU').distinct().rdd.flatMap(lambda x: x).collect()
+
+# COMMAND ----------
+
+# Generate edges
+depth = 3
+edge_list = [ ]
+
+for sku in all_skus: 
+  new_node_list = [ ]
+  for level_ in range(1, (depth + 1)):
+    new_edge_list, new_node_list = extend_one_level(new_node_list, level = level_, sku=sku)
+    edge_list.extend(new_edge_list)
+
+# COMMAND ----------
+
+# Define the graph 
+g=nx.DiGraph()
+g.add_edges_from(edge_list)  
+
+# COMMAND ----------
+
+# Assign a quantity for the graph
+edge_df = nx.to_pandas_edgelist(g)
+edge_df = edge_df.assign(qty = np.where(edge_df.target.str.len() == 10, 1, np.random.randint(1,4, size=edge_df.shape[0])))
+
+# COMMAND ----------
+
+#Create the fnal mat number to sku mapper
+final_mat_number_to_sku_mapper = edge_df[edge_df.target.str.match('SRL|LRL|CAM|SRR|LRR_.*')][["source","target"]]
+final_mat_number_to_sku_mapper = final_mat_number_to_sku_mapper.rename(columns={"source": "final_mat_number", "target": "sku"} )
+
+# COMMAND ----------
+
+# Create BoM
+bom = edge_df[~edge_df.target.str.match('SRL|LRL|CAM|SRR|LRR_.*')]
+bom = bom.rename(columns={"source": "material_in", "target": "material_out"} )
+
+# COMMAND ----------
+
+bom_df = spark.createDataFrame(bom) 
+final_mat_number_to_sku_mapper_df = spark.createDataFrame(final_mat_number_to_sku_mapper)
+
+# COMMAND ----------
+
+bom_df_delta_path = os.path.join(cloud_storage_path, 'bom_df_delta')
+
+# COMMAND ----------
+
+# Write the data 
+bom_df.write \
+.mode("overwrite") \
+.format("delta") \
+.save(bom_df_delta_path)
+
+# COMMAND ----------
+
+spark.sql(f"DROP TABLE IF EXISTS {dbName}.bom")
+spark.sql(f"CREATE TABLE {dbName}.bom USING DELTA LOCATION '{bom_df_delta_path}'")
+
+# COMMAND ----------
+
+final_mat_number_to_sku_mapper_df_path = os.path.join(cloud_storage_path, 'sku_mapper_df_delta')
+
+# COMMAND ----------
+
+final_mat_number_to_sku_mapper_df.write \
+.mode("overwrite") \
+.format("delta") \
+.save(final_mat_number_to_sku_mapper_df_path)
+
+# COMMAND ----------
+
+spark.sql(f"DROP TABLE IF EXISTS {dbName}.sku_mapper")
+spark.sql(f"CREATE TABLE {dbName}.sku_mapper USING DELTA LOCATION '{final_mat_number_to_sku_mapper_df_path}'")
+
+# COMMAND ----------
+
+display(spark.sql(f"select * from {dbName}.sku_mapper"))
+
+# COMMAND ----------
+
+display(spark.sql(f"select * from {dbName}.bom"))
+
+# COMMAND ----------
+
+print("Ending ./_resources/01-data-generator")
