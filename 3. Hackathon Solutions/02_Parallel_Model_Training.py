@@ -354,7 +354,9 @@ display(forecast_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC You may find the full series of notebooks at https://github.com/databricks-industry-solutions/parts-demand-forecasting. For more information about the related solution accelerator, visit https://www.databricks.com/solutions/accelerators/demand-forecasting.
+# MAGIC We're all done! We've taken a dataset, applied pandas transformations, tuned hyperparameters for our model, and made predictions, all in parallel. You can find the full series of notebooks for the related solution accelerator in the <a href="https://github.com/databricks-industry-solutions/parts-demand-forecasting">repository</a>. For more information about the accelerator, visit <a href="https://www.databricks.com/solutions/accelerators/demand-forecasting">the blog</a>.</br></br>
+# MAGIC 
+# MAGIC To accelerate forecasting leveraging many models, try the <a href="https://github.com/databricks-industry-solutions/many-model-forecasting">many model forecasting</a> accelerator
 
 # COMMAND ----------
 
