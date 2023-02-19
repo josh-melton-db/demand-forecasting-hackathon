@@ -130,11 +130,11 @@ def get_sku_for_raw(gx):
   
   # Inititate the edges
   updated_edges = gx.edges.select(f.col("src"),f.col("dst")).withColumn("aggregrated_parents", f.col("dst"))
-  # updated_edges = updated_edges.localCheckpoint()
+  updated_edges = updated_edges.localCheckpoint()
  
   # Inititate the vertices
   updated_vertices = gx.vertices
-  # updated_vertices = updated_vertices.localCheckpoint()
+  updated_vertices = updated_vertices.localCheckpoint()
   
   # Inititate the graph
   g_for_loop = GraphFrame(updated_vertices, updated_edges)
@@ -186,8 +186,8 @@ def get_sku_for_raw(gx):
       break
     
     # Checkpoint
-    # updated_vertices = updated_vertices.localCheckpoint()
-    # updated_edges = updated_edges.localCheckpoint()
+    updated_vertices = updated_vertices.localCheckpoint()
+    updated_edges = updated_edges.localCheckpoint()
     
     #Update the graph
     g_for_loop = GraphFrame(updated_vertices, updated_edges)
@@ -296,7 +296,7 @@ def get_quantity_of_raw_needed_for_its_fin(gx):
     iteration+=1
     
     #Checkpoint
-    # edges_update = edges_update.localCheckpoint()
+    edges_update = edges_update.localCheckpoint()
     
     #Update Graph
     g_for_loop = GraphFrame(vertices, edges_update)
