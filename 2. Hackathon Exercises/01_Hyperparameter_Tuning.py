@@ -198,8 +198,8 @@ def evaluate_model(hyperopt_params):
 # MAGIC Example:
 # MAGIC ```
 # MAGIC search_space = {
-# MAGIC   "max_depth": hyperopt.hp.quniform("max_depth", 2, 5, 1),
-# MAGIC   "num_trees": hyperopt.hp.quniform("num_trees", 10, 100, 1)
+# MAGIC   "max_depth": hp.quniform("max_depth", 2, 5, 1),
+# MAGIC   "num_trees": hp.quniform("num_trees", 10, 100, 1)
 # MAGIC }
 # MAGIC ```
 
