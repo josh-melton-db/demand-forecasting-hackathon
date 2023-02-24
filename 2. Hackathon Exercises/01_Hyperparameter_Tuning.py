@@ -203,7 +203,7 @@ def evaluate_model(hyperopt_params):
 # COMMAND ----------
 
 search_space = {
-  'p': scope.int(...('p', 0, 4, 1)), # TODO 3: define the distribution of the search space, similar to example above, for each line
+  'p': scope.int(...('p', 0, 4, 1)), # TODO 3: define the distribution of the search space, similar to example above, for each hyperparameter
   'd': scope.int(...('d', 0, 2, 1)),
   'q': scope.int(...('q', 0, 4, 1)) 
 }
