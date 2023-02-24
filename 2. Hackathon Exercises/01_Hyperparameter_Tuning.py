@@ -53,7 +53,7 @@ demand_df = demand_df.cache() # just for this example notebook
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Select an example SKU from our dataset to explore and analyze
+# MAGIC Select an example SKU from our dataset to explore and analyze, then split our data into training and scoring datasets
 
 # COMMAND ----------
 
