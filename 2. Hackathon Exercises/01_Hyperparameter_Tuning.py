@@ -252,4 +252,4 @@ displayHTML(f"The optimal parameters for the selected series with SKU '{pdf.SKU.
 # MAGIC %md
 # MAGIC There we have it! We've identified the optimal hyperparameters for our model on one SKU. In the next notebook, we'll walk through how to train our models in parallel across many SKUs
 # MAGIC </br>
-# MAGIC <img src="https://github.com/josh-melton-db/demand-forecasting-hackathon/blob/main/1.%20Examples/Includes/Parallel%20Model%20Training%20-%20So%20What?raw=true" width=60%>
+# MAGIC <img src="https://github.com/josh-melton-db/demand-forecasting-hackathon/blob/main/1.%20Examples/Includes/Parallel%20Model%20Training%20-%20So%20What.png?raw=true" width=60%>
